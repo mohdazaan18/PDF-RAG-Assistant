@@ -57,10 +57,10 @@ const ChatComponent: React.FC<Props> = ({ collection }) => {
     const handleSendChat = async () => {
         setLoading(true);
         setChatHistory((prev) => [...prev, { role: 'user', content: message }]);
+        setMessage('');
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/chat?message=${encodeURIComponent(message)}&collection=${collection}`);
         const data = await res.json();
         setChatHistory(prev => [...prev, { role: 'assistant', content: data?.message, documents: data?.docs }])
-        setMessage('');
         setLoading(false);
     }
 
