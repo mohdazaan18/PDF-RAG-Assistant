@@ -62,7 +62,12 @@ app.post('/upload/pdf', upload.single('pdf'), async (req, res) => {
 
 app.delete('/delete/:collection', async (req, res) => {
     const { collection } = req.params;
-    const deleteRes = await fetch(`${process.env.QDRANT_URL}/collections/${collection}`, { method: 'DELETE' });
+    const deleteRes = await fetch(`${process.env.QDRANT_URL}/collections/${collection}`, {
+        method: 'DELETE',
+        headers: {
+            ...(process.env.QDRANT_API_KEY && { 'api-key': process.env.QDRANT_API_KEY })
+        }
+    });
     if (deleteRes.ok) return res.json({ message: `Deleted ${collection}` });
     return res.status(500).json({ message: 'Failed to delete' });
 })

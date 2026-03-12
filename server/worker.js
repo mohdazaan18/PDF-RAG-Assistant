@@ -29,7 +29,12 @@ const worker = new Worker('file-upload-queue', async (job) => {
             apiKey: process.env.GOOGLE_API_KEY
         });
 
-        await fetch(`${process.env.QDRANT_URL}/collections/${collectionName}`, { method: 'DELETE' });
+        await fetch(`${process.env.QDRANT_URL}/collections/${collectionName}`, {
+            method: 'DELETE',
+            headers: {
+                ...(process.env.QDRANT_API_KEY && { 'api-key': process.env.QDRANT_API_KEY })
+            }
+        });
 
         await QdrantVectorStore.fromDocuments(splitDocs, embeddings, {
             url: process.env.QDRANT_URL,
