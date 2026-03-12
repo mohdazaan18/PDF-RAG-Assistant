@@ -34,7 +34,6 @@ const storage = multer.diskStorage({
     },
 })
 
-
 const upload = multer({ storage: storage })
 
 app.get('/', (req, res) => {
@@ -47,9 +46,7 @@ app.post('/upload/pdf', upload.single('pdf'), async (req, res) => {
         destination: req.file.destination,
         path: req.file.path,
     }))
-    return res.json({
-        message: "Uplaoded"
-    })
+    return res.json({ message: "Uploaded" })
 })
 
 app.delete('/delete/:collection', async (req, res) => {
@@ -77,12 +74,7 @@ app.get('/chat', async (req, res) => {
     const retreiver = vectorStore.asRetriever({ k: 2 });
     const result = await retreiver.invoke(userQuery);
 
-    const SYSTEM_PROMPT = `
-    You are a helpful AI assistant who answers the user query based on the available context from PDF File.
-    If the answer is not present in the context, say "I don't have the answer.".
-    Context : 
-    ${JSON.stringify(result)}
-    `
+    const SYSTEM_PROMPT = `You are a helpful AI assistant who answers the user query based on the available context from PDF File. If the answer is not present in the context, say "I don't have the answer.". Context: ${JSON.stringify(result)}`
 
     const chatResult = await client.invoke([
         new SystemMessage(SYSTEM_PROMPT),
@@ -92,6 +84,4 @@ app.get('/chat', async (req, res) => {
     return res.json({ message: chatResult.content, docs: result });
 })
 
-app.listen(8000, () => {
-    console.log('Server started on PORT: 8000')
-})
+app.listen(8000)
