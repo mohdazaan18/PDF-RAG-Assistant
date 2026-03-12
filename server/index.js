@@ -8,8 +8,11 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { ChatGroq } from "@langchain/groq"
 import { SystemMessage, HumanMessage } from "@langchain/core/messages"
+import { mkdirSync } from "fs";
 
 config();
+
+mkdirSync('uploads', { recursive: true });
 
 const client = new ChatGroq({
     model: "llama-3.3-70b-versatile",
@@ -84,4 +87,5 @@ app.get('/chat', async (req, res) => {
     return res.json({ message: chatResult.content, docs: result });
 })
 
-app.listen(8000)
+const PORT = process.env.PORT || 8000;
+app.listen(PORT)
