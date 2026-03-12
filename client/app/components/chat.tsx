@@ -65,7 +65,7 @@ const ChatComponent: React.FC<Props> = ({ collection }) => {
     }
 
     return (
-        <div className='h-full flex flex-col'>
+        <div className='h-dvh flex flex-col'>
             <ScrollArea className='flex-1 min-h-0 p-4 px-6'>
                 {
                     chatHistory.map((chat, index) => (
