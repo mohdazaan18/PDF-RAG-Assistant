@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import { Queue } from "bullmq"
+import Redis from "ioredis"
 import { config } from "dotenv";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { QdrantVectorStore } from "@langchain/qdrant";
@@ -16,12 +17,9 @@ const client = new ChatGroq({
     temperature: 0,
 })
 
-const queue = new Queue("file-upload-queue", {
-    connection: {
-        host: 'localhost',
-        port: '6379'
-    }
-})
+const connection = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+
+const queue = new Queue("file-upload-queue", { connection })
 
 const app = express();
 app.use(cors());
@@ -73,6 +71,7 @@ app.get('/chat', async (req, res) => {
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
         url: process.env.QDRANT_URL,
         collectionName,
+        ...(process.env.QDRANT_API_KEY && { apiKey: process.env.QDRANT_API_KEY }),
     });
 
     const retreiver = vectorStore.asRetriever({ k: 2 });

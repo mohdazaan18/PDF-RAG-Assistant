@@ -1,4 +1,5 @@
 import { Worker } from "bullmq";
+import Redis from "ioredis";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { config } from "dotenv";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
@@ -6,6 +7,8 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 
 config();
+
+const connection = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
 const worker = new Worker('file-upload-queue', async (job) => {
     console.log(`Job received: ${job.data}`)
@@ -39,6 +42,7 @@ const worker = new Worker('file-upload-queue', async (job) => {
         await QdrantVectorStore.fromDocuments(splitDocs, embeddings, {
             url: process.env.QDRANT_URL,
             collectionName,
+            ...(process.env.QDRANT_API_KEY && { apiKey: process.env.QDRANT_API_KEY }),
         });
 
         console.log(`✅ All ${splitDocs.length} chunks stored in collection: ${collectionName}`)
@@ -49,9 +53,6 @@ const worker = new Worker('file-upload-queue', async (job) => {
 },
     {
         concurrency: 100,
-        connection: {
-            host: 'localhost',
-            port: '6379'
-        }
+        connection,
     }
 );
