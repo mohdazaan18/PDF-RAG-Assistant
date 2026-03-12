@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import multer from "multer";
-import { Queue } from "bullmq"
+import { Queue, QueueEvents } from "bullmq"
 import Redis from "ioredis"
 import { config } from "dotenv";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
@@ -9,6 +9,7 @@ import { QdrantVectorStore } from "@langchain/qdrant";
 import { ChatGroq } from "@langchain/groq"
 import { SystemMessage, HumanMessage } from "@langchain/core/messages"
 import { mkdirSync } from "fs";
+import "./worker.js"; // Run worker in the same process for free-tier deployments
 
 config();
 
@@ -23,6 +24,7 @@ const client = new ChatGroq({
 const connection = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
 
 const queue = new Queue("file-upload-queue", { connection })
+const queueEvents = new QueueEvents("file-upload-queue", { connection })
 
 const app = express();
 app.use(cors());
@@ -44,12 +46,18 @@ app.get('/', (req, res) => {
 })
 
 app.post('/upload/pdf', upload.single('pdf'), async (req, res) => {
-    await queue.add("file-ready", JSON.stringify({
+    const job = await queue.add("file-ready", JSON.stringify({
         filename: req.file.originalname,
         destination: req.file.destination,
         path: req.file.path,
     }))
-    return res.json({ message: "Uploaded" })
+
+    try {
+        await job.waitUntilFinished(queueEvents);
+        return res.json({ message: "Uploaded" })
+    } catch (error) {
+        return res.status(500).json({ message: "Failed to process PDF" });
+    }
 })
 
 app.delete('/delete/:collection', async (req, res) => {

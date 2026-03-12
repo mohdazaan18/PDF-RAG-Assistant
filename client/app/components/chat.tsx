@@ -123,7 +123,7 @@ const ChatComponent: React.FC<Props> = ({ collection }) => {
             </ScrollArea>
             <div className='p-4 px-6 border-t'>
                 <Field orientation="horizontal">
-                    <Input value={message} onChange={(e) => setMessage(e.target.value)} type="search" placeholder="Type your query here..." className='h-10' />
+                    <Input value={message} onKeyDown={(e) => e.key === 'Enter' && handleSendChat()} onChange={(e) => setMessage(e.target.value)} type="search" placeholder="Type your query here..." className='h-10' />
                     <Button onClick={handleSendChat} className="cursor-pointer px-12 disabled:cursor-not-allowed disabled:pointer-events-auto h-10" disabled={message.trim().length <= 0 || loading}>{
                         loading ? <Spinner className="size-5" /> : 'Ask'
                     }</Button>

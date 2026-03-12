@@ -2,6 +2,7 @@
 import { UserButton } from "@clerk/nextjs";
 import { Upload, X } from "lucide-react";
 import * as React from 'react'
+import { Spinner } from '@/components/ui/spinner'
 
 interface UploadedFile {
     name: string;
@@ -16,6 +17,7 @@ interface Props {
 const FileUploadComponent: React.FC<Props> = ({ onUpload }) => {
 
     const [files, setFiles] = React.useState<UploadedFile[]>([]);
+    const [loading, setLoading] = React.useState(false);
 
     const handleUploadButtonClick = () => {
         const el = document.createElement('input');
@@ -26,6 +28,7 @@ const FileUploadComponent: React.FC<Props> = ({ onUpload }) => {
                 const file = el.files.item(0);
 
                 if (file) {
+                    setLoading(true);
                     const formData = new FormData();
                     formData.append('pdf', file);
 
@@ -37,6 +40,7 @@ const FileUploadComponent: React.FC<Props> = ({ onUpload }) => {
                     const collectionName = file.name.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
                     setFiles(prev => [...prev, { name: file.name, size: file.size, collection: collectionName }]);
                     onUpload(collectionName);
+                    setLoading(false);
                 }
             }
         })
@@ -51,9 +55,18 @@ const FileUploadComponent: React.FC<Props> = ({ onUpload }) => {
     return (
         <div className="h-full flex flex-col w-full">
             <div className="flex-1 flex items-center justify-center flex-col">
-                <div onClick={handleUploadButtonClick} className="bg-slate-900 text-white shadow-2xl flex justify-center items-center p-4 rounded-lg border-white border gap-2 cursor-pointer">
-                    <h3>Upload PDF File</h3>
-                    <Upload />
+                <div onClick={!loading ? handleUploadButtonClick : undefined} className={`bg-slate-900 text-white shadow-2xl flex justify-center items-center p-4 rounded-lg border-white border gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    {loading ? (
+                        <>
+                            <h3>Processing PDF...</h3>
+                            <Spinner className="size-5" />
+                        </>
+                    ) : (
+                        <>
+                            <h3>Upload PDF File</h3>
+                            <Upload />
+                        </>
+                    )}
                 </div>
                 <div className="flex flex-col gap-2 mt-4">
                     {
